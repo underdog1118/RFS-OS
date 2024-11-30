@@ -31,6 +31,21 @@ typedef struct {
     char remote_path[PATH_MAX];
 } Command;
 
+
+/*
+typedef struct {
+ int argc;
+ char *argv[];
+} ClientThreadData;
+*/
+
+typedef struct {
+  Command cmd;
+  int client_sock;
+  char full_path[PATH_MAX];
+} ServerThreadData;
+
+
 // Function prototypes
 int parse_command(int argc, char *argv[], Command *cmd);
 int send_file(int socket, const char *filepath);

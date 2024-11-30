@@ -1,4 +1,4 @@
-/*
+ /*
  * client.c -- TCP Socket Client
  * 
  * adapted from: 
@@ -11,6 +11,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "rfs.h"
+
+/*
+* Multithread change
+*/
+#include <pthread.h>
+#include <semaphore.h>
+
 
 int parse_command(int argc, char *argv[], Command *cmd) {
     if (argc < 3) return -1;
@@ -106,7 +113,6 @@ int receive_file(int socket, const char *filepath) {
     while (bytes_received < filesize) {
         chunk_size = (filesize - bytes_received > BUFFER_SIZE) 
             ? BUFFER_SIZE : (filesize - bytes_received);
-        
         ssize_t received = recv(socket, buffer, chunk_size, 0);
         if (received <= 0) {
             perror("Error receiving file data");
@@ -122,8 +128,79 @@ int receive_file(int socket, const char *filepath) {
     return 0;
 }
 
+/*
+ Multithread change
+*/
+void* clientthread(void* args){
+
+  //int result = 0;
+  Command *cmd = args;
+  // Create socket
+  int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+  if (socket_desc < 0) {
+      perror("Unable to create socket");
+      //return -1;
+      //result = -1;
+      //return result;
+  }
+
+  // Configure server address
+  struct sockaddr_in server_addr;
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_port = htons(PORT);
+  server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+  if (connect(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    perror("Unable to connect to server");
+    close(socket_desc);
+    //return -1;
+    //result = -1;
+    //return result;
+  }
+
+  // Send command type
+  if (send(socket_desc, &cmd, sizeof(cmd), 0) < 0) {
+    perror("Error sending command");
+    close(socket_desc);
+    //return -1;
+    //result = -1;
+    //return result;
+  }
+
+  // Handle specific command types
+  //int result = 0;
+  switch (cmd->type) {
+      case CMD_WRITE:
+          //result = send_file(socket_desc, cmd->local_path);
+          send_file(socket_desc, cmd->local_path);
+          break;
+      case CMD_GET:
+          //result = receive_file(socket_desc, cmd->local_path);
+          receive_file(socket_desc, cmd->local_path);
+          break;
+      case CMD_RM: {
+          // Wait for server response about deletion
+          int status;
+          recv(socket_desc, &status, sizeof(status), 0);
+          //result = status;
+          break;
+      }
+      default:
+          //result = -1;
+          break;
+  }
+
+  // Close socket
+  free(cmd);
+  close(socket_desc);
+  pthread_exit(NULL);
+  //return result;
+}
+
 int main(int argc, char *argv[]) {
     Command cmd;
+    int result = 0;
+    pthread_t tid;
     // Usage Instrustions
     if (parse_command(argc, argv, &cmd) < 0) { 
         fprintf(stderr, "Usage:\n");
@@ -133,12 +210,21 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // Create thread
+    pthread_create(&tid,
+                   NULL,
+                   clientthread,
+   //                  &client_request);
+                   &cmd);
+    sleep(1);
+
+    /*
     // Create socket
     int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc < 0) {
         perror("Unable to create socket");
         return -1;
-    }
+    } 
 
     // Configure server address
     struct sockaddr_in server_addr;
@@ -146,6 +232,7 @@ int main(int argc, char *argv[]) {
     server_addr.sin_port = htons(PORT);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+    
     // Connect to server
     if (connect(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Unable to connect to server");
@@ -159,6 +246,7 @@ int main(int argc, char *argv[]) {
         close(socket_desc);
         return -1;
     }
+    
 
     // Handle specific command types
     int result = 0;
@@ -182,6 +270,12 @@ int main(int argc, char *argv[]) {
 
     // Close socket
     close(socket_desc);
+
+    */
+    /*
+    * Multithread change
+    */
+    pthread_join(tid, NULL);
 
     return result;
 }

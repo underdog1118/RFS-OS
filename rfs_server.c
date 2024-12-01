@@ -1,4 +1,8 @@
-/*
+ /*
+ * Name: Zhengpeng Qui and Blake Koontz
+ * Course: CS5600
+ * Semester: Fall 2024
+ *
  * server.c -- TCP Socket Server
  *
  * adapted from:
@@ -86,14 +90,15 @@ void* process_get(void* server_thread_data) {
   //Lock semaphore
   sem_wait(&x);
 
-  ServerThreadData* data = server_thread_data;
+  //ServerThreadData* data = server_thread_data;
+  ServerThreadData data = *((ServerThreadData*)server_thread_data);
   printf("\nRead entered");
   //readercount++;
   //if (readercount == 1){
  //   sem_wait(&y);
  // }
   // Open file to send
-  FILE *file = fopen(data->full_path, "rb");
+  FILE *file = fopen(data.full_path, "rb");
   //FILE *file = fopen(full_path, "rb");
   if (!file) {
     perror("Error opening server file");
@@ -108,7 +113,7 @@ void* process_get(void* server_thread_data) {
 
   // Send file size
   //if (send(client_sock, &filesize, sizeof(filesize), 0) <= 0) {
-  if (send(data->client_sock, &filesize, sizeof(filesize), 0) <= 0) {
+  if (send(data.client_sock, &filesize, sizeof(filesize), 0) <= 0) {
     perror("Error sending file size");
     fclose(file);
     //result = -1;
@@ -121,7 +126,7 @@ void* process_get(void* server_thread_data) {
   size_t bytes_read;
   while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
     //if (send(client_sock, buffer, bytes_read, 0) <= 0) {
-    if (send(data->client_sock, buffer, bytes_read, 0) <= 0) {
+    if (send(data.client_sock, buffer, bytes_read, 0) <= 0) {
       perror("Error sending file data");
       fclose(file);
       //result = -1;
@@ -165,12 +170,17 @@ void* process_write(void* server_thread_data) {
     sem_wait(&y);
 
 
-    ServerThreadData* data = server_thread_data;
+    //ServerThreadData* data = server_thread_data;
+    ServerThreadData data = *((ServerThreadData*)server_thread_data);
+    printf("\nprocess_write func");
+    printf("\ndata client_sock:%d",data.client_sock);
+
+
     printf("\nWriter has entered");
 
    // Receive file
    //FILE *file = fopen(server_thread_data->full_path, "wb");
-   FILE *file = fopen(data->full_path, "wb");
+   FILE *file = fopen(data.full_path, "wb");
    if (!file) {
      //perror("Error creating server file");
      //result = -1;
@@ -181,7 +191,7 @@ void* process_write(void* server_thread_data) {
    // Receive file size
    long filesize;
    //if (recv(client_sock, &filesize, sizeof(filesize), 0) <= 0) {
-   if (recv(data->client_sock, &filesize, sizeof(filesize), 0) <= 0) {
+   if (recv(data.client_sock, &filesize, sizeof(filesize), 0) <= 0) {
      perror("Error receiving file size");
      fclose(file);
      //result = -1;
@@ -203,16 +213,16 @@ void* process_delete(void* server_thread_data) {
   // Lock the semaphore
   sem_wait(&y);
 
-  ServerThreadData* data = server_thread_data;
-
+  //ServerThreadData* data = server_thread_data;
+  ServerThreadData data = *((ServerThreadData*)server_thread_data);
   // Delete file or directory
   //result = delete_file_or_directory(full_path);
   int result = 0;
-  result = delete_file_or_directory(data->full_path);
+  result = delete_file_or_directory(data.full_path);
 
   // Send deletion status back to client
   //send(client_sock, &result, sizeof(result), 0);
-  send(data->client_sock, &result, sizeof(result), 0);
+  send(data.client_sock, &result, sizeof(result), 0);
 
   printf("\nDelete has entered");
   // Lock the semaphore
@@ -363,20 +373,24 @@ int main(void) {
         int result = 0;
         int max_connections = 50;
 
+
         // Assemble for thread
         ServerThreadData server_thread_data;
         //server_thread_data->cmd = cmd;
-        server_thread_data.cmd = cmd;
+        //server_thread_data.cmd = cmd;
+        memcpy(&server_thread_data.cmd,&cmd,sizeof(cmd));
+        memcpy(&server_thread_data.client_sock,&client_sock,sizeof(client_sock));
         //server_thread_data.full_path = full_path;
         //strcpy(server_thread_data.full_path, full_path);
         snprintf(server_thread_data.full_path, sizeof(server_thread_data.full_path), "%s%s", SERVER_ROOT, cmd.remote_path);
 
-        printf("\nlocal path:%s",server_thread_data.cmd.local_path);
-        printf("\nremote path:%s",server_thread_data.cmd.remote_path);
-        printf("\nfull_path:%s",server_thread_data.full_path);
+        printf("\nServer main func");
+        printf("\nserver thread local path:%s",server_thread_data.cmd.local_path);
+        printf("\nserver thread remote path:%s",server_thread_data.cmd.remote_path);
+        printf("\nserver thread full_path:%s",server_thread_data.full_path);
+        printf("\nserver thread client sock:%d",server_thread_data.client_sock);
 
         switch (cmd.type) {
-        //switch (server_thread_data.cmd.type) {
             case CMD_WRITE: {
 
                 /*

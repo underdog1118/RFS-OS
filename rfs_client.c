@@ -1,3 +1,4 @@
+
  /*
  * client.c -- TCP Socket Client
  * 
@@ -134,7 +135,10 @@ int receive_file(int socket, const char *filepath) {
 void* clientthread(void* args){
 
   //int result = 0;
-  Command *cmd = args;
+  Command cmd = *((Command*)args);
+  printf("\n*Client clientthread func*");
+  printf("\nCommand local path:%s",cmd.local_path);
+  printf("\nCommand remote path:%s",cmd.remote_path);
   // Create socket
   int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_desc < 0) {
@@ -169,14 +173,14 @@ void* clientthread(void* args){
 
   // Handle specific command types
   //int result = 0;
-  switch (cmd->type) {
+  switch (cmd.type) {
       case CMD_WRITE:
           //result = send_file(socket_desc, cmd->local_path);
-          send_file(socket_desc, cmd->local_path);
+          send_file(socket_desc, cmd.local_path);
           break;
       case CMD_GET:
           //result = receive_file(socket_desc, cmd->local_path);
-          receive_file(socket_desc, cmd->local_path);
+          receive_file(socket_desc, cmd.local_path);
           break;
       case CMD_RM: {
           // Wait for server response about deletion
@@ -191,7 +195,7 @@ void* clientthread(void* args){
   }
 
   // Close socket
-  free(cmd);
+  //free(cmd);
   close(socket_desc);
   pthread_exit(NULL);
   //return result;
@@ -210,6 +214,12 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    /*
+    * DELETE
+    */
+    printf("\n*Client Main func*");
+    printf("\nCommand local path:%s",cmd.local_path);
+    printf("\nCommand remote path:%s",cmd.remote_path);
     // Create thread
     pthread_create(&tid,
                    NULL,
@@ -224,7 +234,7 @@ int main(int argc, char *argv[]) {
     if (socket_desc < 0) {
         perror("Unable to create socket");
         return -1;
-    } 
+    }
 
     // Configure server address
     struct sockaddr_in server_addr;

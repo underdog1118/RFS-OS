@@ -198,6 +198,7 @@ void* clientthread(void* args){
   //free(cmd);
   close(socket_desc);
   pthread_exit(NULL);
+  return 0; 
   //return result;
 }
 
@@ -227,64 +228,6 @@ int main(int argc, char *argv[]) {
    //                  &client_request);
                    &cmd);
     sleep(1);
-
-    /*
-    // Create socket
-    int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_desc < 0) {
-        perror("Unable to create socket");
-        return -1;
-    }
-
-    // Configure server address
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    
-    // Connect to server
-    if (connect(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Unable to connect to server");
-        close(socket_desc);
-        return -1;
-    }
-
-    // Send command type
-    if (send(socket_desc, &cmd, sizeof(cmd), 0) < 0) {
-        perror("Error sending command");
-        close(socket_desc);
-        return -1;
-    }
-    
-
-    // Handle specific command types
-    int result = 0;
-    switch (cmd.type) {
-        case CMD_WRITE:
-            result = send_file(socket_desc, cmd.local_path);
-            break;
-        case CMD_GET:
-            result = receive_file(socket_desc, cmd.local_path);
-            break;
-        case CMD_RM: {
-            // Wait for server response about deletion
-            int status;
-            recv(socket_desc, &status, sizeof(status), 0);
-            result = status;
-            break;
-        }
-        default:
-            result = -1;
-    }
-
-    // Close socket
-    close(socket_desc);
-
-    */
-    /*
-    * Multithread change
-    */
     pthread_join(tid, NULL);
 
     return result;

@@ -83,8 +83,7 @@ Delete a file or directory on the server.
 ```
 ./rfs RM remote/uploaded_file.txt
 ```
-
-##### **d. MULTIPLE CLIENTS**
+#### **3. Multiple Clients**
 
 To handle multiple clients you can create multiple clients connected to the server
 

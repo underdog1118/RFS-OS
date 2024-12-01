@@ -84,7 +84,28 @@ Delete a file or directory on the server.
 ./rfs RM remote/uploaded_file.txt
 ```
 
+##### **d. MULTIPLE CLIENTS**
 
+To handle multiple clients you can create multiple clients connected to the server
+
+For testing purposes:
+Use SSH to create a session and begin running the server.
+```
+./rfserver
+```
+
+Next create a new SSH session to simulate client 1.
+Now begin to enter commands or run a bash script for commands.
+For example:
+```bash
+./rfs WRITE <local_file> <remote_file>
+```
+Next create a new SSH session to simulate client 2.
+Now begin to enter commands or run a bash script for commands.
+For example:
+```bash
+./rfs WRITE <local_file> <remote_file>
+```
 
 ### **5. Notes**
 
@@ -96,11 +117,4 @@ Delete a file or directory on the server.
 
 **Limitations**
 
-​	•	Single-client handling (no concurrency).
-
 ​	•	No authentication or encryption.
-
-​	
-
-
-

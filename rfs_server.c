@@ -85,7 +85,7 @@ int delete_file_or_directory(const char *filepath) {
 }
 
 //void* process_get(void* server_thread_data){
-void* process_get(void* server_thread_data) {
+void* process_get(void* server_thread_data) {   
   printf("\nRead is trying to enter");
   //Lock semaphore
   sem_wait(&x);
@@ -216,6 +216,9 @@ void* process_write(void* server_thread_data) {
 
    // Receive file
    //FILE *file = fopen(server_thread_data->full_path, "wb");
+
+   create_server_directories(data.full_path);
+
    FILE *file = fopen(data.full_path, "wb");
    if (!file) {
      perror("Error creating server file");
@@ -234,6 +237,26 @@ void* process_write(void* server_thread_data) {
      //result = -1;
      //break;
    }
+
+
+    // Receive file contents
+    char buffer[BUFFER_SIZE];
+    long bytes_received = 0;
+    ssize_t received;
+    while (bytes_received < filesize) {
+        received = recv(data.client_sock, buffer, BUFFER_SIZE, 0);
+        if (received <= 0) {
+            perror("Error receiving file data");
+            fclose(file);
+            // result = -1;
+            // break;
+        }
+        fwrite(buffer, 1, received, file);
+        bytes_received += received;
+    }
+
+    fclose(file);
+    // break;
 
     // Unlock the semaphore
     sem_post(&y);

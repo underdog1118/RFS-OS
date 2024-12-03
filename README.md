@@ -1,5 +1,11 @@
 ## Remote File System (RFS)
 
+* **Name**: Zhengpeng Qiu and Blake Koontz
+
+* **Course**: CS5600
+
+* **Semester**: Fall 2024
+
 ### **1. Overview**
 
 RFS is a client-server application that allows clients to perform file operations on a remote server over TCP sockets. Clients can upload, download, and delete files on the server.
@@ -105,6 +111,16 @@ For example:
 ```bash
 ./rfs WRITE <local_file> <remote_file>
 ```
+
+#### **4. Stop the server**
+
+Press **CTRL+C** in the server terminal, and you will see:
+
+```bash
+Caught SIGINT!
+```
+
+Reference: When you stop a process with CTRL-C, it'll exit by default leaving ports open and potentially data unset. So, it is best to "catch" or "trap" the SIGINT signal and add your own behavior so you can do a "safe" exit... [https://www.delftstack.com/howto/c/sigint-in-c/Links to an external site.](https://www.delftstack.com/howto/c/sigint-in-c/)	
 
 ### **5. Notes**
 
